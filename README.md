@@ -8,6 +8,8 @@ This simple node:
 
 ## Note on Odometry
 
-Firmware 1.2.0 has a bug that will prevent this node to merge topics under `/leo_odom`
-See this (issue)[https://github.com/LeoRover/leo_firmware/issues/4]
+Firmware 1.2.0 has a bug that will prevent this node to merge topics under `/leo_odom`.
+
+See this [issue](https://github.com/LeoRover/leo_firmware/issues/4).
+
 The solution is described in the issue itself: you have to recompile and flash the firmware by adding the missing code line.
