@@ -1,0 +1,3 @@
+<launch>
+  <node name="leo_adapter" pkg="leo_adapter" type="leo_adapter" output="screen"/>
+</launch>

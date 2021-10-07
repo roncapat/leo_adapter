@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import rospy
+import message_filters
+from std_msgs.msg import Header
+from geometry_msgs.msg import Vector3Stamped, TwistStamped, PoseStamped
+from sensor_msgs.msg import MagneticField, Imu
+from nav_msgs.msg import Odometry
+
+global imu_pub, mag_pub, odom_pub
+
+def imu_callback(gyro, accel):
+    global imu_pub
+    msg = Imu()
+    msg.header = gyro.header
+    msg.angular_velocity = gyro.vector
+    msg.linear_acceleration = accel.vector
+    imu_pub.publish(msg)
+
+def odom_callback(twist, pose):
+    global odom_pub
+    msg = Odometry()
+    msg.header = pose.header
+    msg.child_frame_id = twist.header.frame_id
+    msg.pose.pose = pose.pose
+    msg.twist.twist = twist.twist
+    odom_pub.publish(msg)
+
+def mag_callback(data):
+    global mag_pub
+    msg = MagneticField()
+    msg.header = data.header
+    msg.magnetic_field = data.vector
+    mag_pub.publish(msg)
+
+def listener():
+    rospy.init_node('leo_adapter', anonymous=True)
+
+    global imu_pub, mag_pub, odom_pub
+    imu_pub = rospy.Publisher('/leo_imu/data_raw', Imu, queue_size=10)
+    mag_pub = rospy.Publisher('/leo_imu/mag', MagneticField, queue_size=10)
+    odom_pub = rospy.Publisher('/leo_odom', Odometry, queue_size=10)
+
+    gyro_sub = message_filters.Subscriber('/imu/gyro', Vector3Stamped)
+    accel_sub = message_filters.Subscriber('/imu/accel', Vector3Stamped)
+    imu_ts = message_filters.TimeSynchronizer([gyro_sub, accel_sub], 10)
+    imu_ts.registerCallback(imu_callback)
+
+    twist_sub = message_filters.Subscriber('/wheel_odom', TwistStamped)
+    pose_sub = message_filters.Subscriber('/wheel_pose', PoseStamped)
+    odom_ts = message_filters.TimeSynchronizer([twist_sub, pose_sub], 10)
+    odom_ts.registerCallback(odom_callback)
+
+    mag_sub = rospy.Subscriber('/imu/mag', Vector3Stamped, mag_callback)
+
+    rospy.spin()
+
+if __name__ == '__main__':
+    listener()
